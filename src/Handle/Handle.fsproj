@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AkkaCommon.fs" />
+    <Compile Include="EventHandler.fs" />
+    <Compile Include="CommandHandler.fs" />
+    <Compile Include="Saga.fs" />
+    <Compile Include="RequestHandler.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kernel\Kernel.fsproj" />
+    <ProjectReference Include="..\Write\Write.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.FSharp" Version="1.3.14" />
+  </ItemGroup>
+
+</Project>

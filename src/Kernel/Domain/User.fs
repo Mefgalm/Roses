@@ -11,11 +11,18 @@ type UserEvent =
 let private toOk = Result<UserEvent list, string>.Ok
 let private toError = Result<UserEvent list, string>.Error
   
+
 type User =
     { Id: Guid
       Email: Email
       Password: Password
       CreatedDate: DateTime }
+    with
+        static member Default =
+            { Id = Guid.Empty
+              Email = ""
+              Password = ""
+              CreatedDate = DateTime.MinValue }
 
 let createUser id email password repeatPassword getTime =
     if password = repeatPassword then
@@ -43,3 +50,4 @@ let applyEvent user event =
         
 let applyEvents user events =
     events |> Seq.fold applyEvent user
+            

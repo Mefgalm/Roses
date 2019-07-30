@@ -5,14 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="AkkaCommon.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\User.fs" />
+    <Compile Include="Domain\Rose.fs" />
     <Compile Include="Types.fs" />
-    <Compile Include="EventHandler.fs" />
-    <Compile Include="CommandHandler.fs" />
-    <Compile Include="Saga.fs" />
-    <Compile Include="RequestHandler.fs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,7 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\Common.fsproj" />
+    <ProjectReference Include="..\Common\Common.fsproj" />
   </ItemGroup>
+
 
 </Project>

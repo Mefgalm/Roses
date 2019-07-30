@@ -1,9 +1,9 @@
-module Kernel.RequestHandler
+module Handle.RequestHandler
 
 open System
 open Saga
 open Akka.FSharp
-open Types
+open Kernel.Types
 open AkkaCommon
 open Common
 open Common.Operators
@@ -23,7 +23,7 @@ let requestHandler eventHandlerActor request =
         let userId = Guid.NewGuid()
 
         saga <! SagaCommand.AddForwardCommand ^ Forward ((Command.CreateUser (userId, password, repeatPassword, email)), Command.RemoveUser ^ userId)
-        saga <! SagaCommand.AddForwardCommand ^ Forward ((Command.ChangeUserEmail (userId, "new-email@g.com"), Command.ChangeUserEmail (userId, email)))
+        //saga <! SagaCommand.AddForwardCommand ^ Forward ((Command.ChangeUserEmail (userId, "new-email@g.com"), Command.ChangeUserEmail (userId, email)))
         
         saga <^? SagaCommand.Start
     | _ ->

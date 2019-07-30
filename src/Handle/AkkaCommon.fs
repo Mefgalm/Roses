@@ -1,4 +1,4 @@
-module Kernel.AkkaCommon
+module Handle.AkkaCommon
 
 open Akka.Actor
 open Akka.FSharp

@@ -1,8 +1,8 @@
-module Kernel.Saga
+module Handle.Saga
 
 open Akka.FSharp
 open System
-open Types
+open Kernel.Types
 open AkkaCommon
 open CommandHandler
 open Common.Operators
