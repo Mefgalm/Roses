@@ -1,6 +1,7 @@
 module Write.EventStore
 
 open System
+open System
 open System.IO
 open EventStore.ClientAPI
 open MBrace.FsPickler.Json
@@ -10,7 +11,8 @@ open FSharp.Control.Tasks
 [<Literal>]
 let eventStoreConnectionStrings = "ConnectTo=tcp://admin:changeit@localhost:1113; HeartBeatTimeout=500"
 
-let writeEvent (stream: Guid) eventType version events = task {
+let writeEvent (stream: Guid) eventType version events =
+    Async.AwaitTask <| task {
     try 
         let connection = EventStoreConnection.Create(eventStoreConnectionStrings)
         
@@ -23,6 +25,8 @@ let writeEvent (stream: Guid) eventType version events = task {
         
         let esEvent = new EventData(Guid.NewGuid(), eventType, true, msStream.ToArray(), Array.empty)
         
+        printfn "version %i" version
+        
         let! _ = connection.AppendToStreamAsync(stream.ToString(), version, esEvent)
         
         return Ok ()
@@ -32,7 +36,8 @@ let writeEvent (stream: Guid) eventType version events = task {
 }
     
     
-let readEvents stream = task {
+let readEvents stream =
+    Async.AwaitTask <| task {
     try 
         let connection = EventStoreConnection.Create eventStoreConnectionStrings
         
@@ -44,7 +49,7 @@ let readEvents stream = task {
         
         let events = new System.Collections.Generic.List<ResolvedEvent>()        
         
-        while (not isEnd) do                    
+        while not isEnd do                    
             let! eventsSlice = connection.ReadStreamEventsForwardAsync(stream, start, count, false)
             
             events.AddRange eventsSlice.Events        

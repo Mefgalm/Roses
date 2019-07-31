@@ -25,16 +25,16 @@ let eventStore nextVersion event =
     | DomainEvent.User (UserEvent.EmailUpdated (id, _) as e) ->
         EventStore.writeEvent id user nextVersion e
 
-let mongoDb () = task {    
+let mongoDb () = async {    
     return Ok ()
 }
 
 
-let eventHandler nextVersion event = task {
-    let! results = [eventStore nextVersion event; mongoDb ()] |> Task.WhenAll
+let eventHandler nextVersion event = async {
+    let! results = [eventStore nextVersion event; mongoDb ()] |> Async.Parallel
     
     return results |> Result.reduceResults    
-}
+} 
          
 
 //let eventHandlerActor =

@@ -12,7 +12,7 @@ open EventStore.ClientAPI
 open EventStore.ClientAPI
 open FSharp.Control.Tasks
 open Kernel.Types
-
+open Handle
 
     
 //let getRose stream =
@@ -24,6 +24,13 @@ open Kernel.Types
 [<EntryPoint>]
 let main argv =
     
+    let createUserRequest = (RequestHandler.Request.CreateUser  ("mefgalm@gmail.com", "123", "123"))
+    
+    let response = RequestHandler.requestHandler createUserRequest
+    
+    printfn "result is %A" response
+    
+    Console.ReadKey() |> ignore
     
     0
     

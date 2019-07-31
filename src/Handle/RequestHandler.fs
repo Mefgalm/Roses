@@ -11,10 +11,10 @@ open Common.Operators
 [<RequireQualifiedAccessAttribute>]
 type Request =
     | CreateUser of Email: string * Password: string * RepeatPassword: string
-    | ChangeUserEmail of Id: Guid * NewEmail: string
+    | ChangeUserEmail of UserId: Guid * NewEmail: string
 
 
-let requestHandler eventHandlerActor request =
+let requestHandler request =
     match request with
     | Request.CreateUser (email, password, repeatPassword) ->                    
                     
@@ -22,9 +22,13 @@ let requestHandler eventHandlerActor request =
 
         let userId = Guid.NewGuid()
 
-        saga <! SagaCommand.AddForwardCommand ^ Forward ((Command.CreateUser (userId, password, repeatPassword, email)), Command.RemoveUser ^ userId)
-        //saga <! SagaCommand.AddForwardCommand ^ Forward ((Command.ChangeUserEmail (userId, "new-email@g.com"), Command.ChangeUserEmail (userId, email)))
+        saga <! SagaCommand.AddForwardCommand ^ Forward ((Command.CreateUser (userId, email, password, repeatPassword)), Command.RemoveUser ^ userId)        
         
         saga <^? SagaCommand.Start
-    | _ ->
+    | Request.ChangeUserEmail  (userId, newEmail) ->
+        
+        let saga = runSaga()
+        
+        //get user from ES    
         SagaResponse.ForwardComplete
+    

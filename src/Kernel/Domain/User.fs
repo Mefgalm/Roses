@@ -2,15 +2,16 @@ module Kernel.Domain.User
 
 open System
 open Kernel.Domain.DomainTypes
+open Kernel.Domain.DomainTypes
 
 [<RequireQualifiedAccessAttribute>]
 type UserEvent = 
     | UserCreated of Id: Guid * Email * Password * CreatedDate: DateTime
     | EmailUpdated of Id: Guid * NewEmail: Email
 
-let private toOk = Result<UserEvent list, string>.Ok
-let private toError = Result<UserEvent list, string>.Error
-  
+//let private toOk = Ok
+//let private toError = Error
+//  
 
 type User =
     { Id: Guid
@@ -20,21 +21,21 @@ type User =
     with
         static member Default =
             { Id = Guid.Empty
-              Email = ""
-              Password = ""
+              Email = Email.example
+              Password = Password.example
               CreatedDate = DateTime.MinValue }
 
 let createUser id email password repeatPassword getTime =
     if password = repeatPassword then
-        [UserEvent.UserCreated (id, email, password, getTime())] |> toOk
+        Ok [UserEvent.UserCreated (id, email, password, getTime())]
     else
-        "Passwords don't match" |> toError
+        Error "Passwords don't match" 
 
 let updateEmail user newEmail =
     if user.Email <> newEmail then
-        [UserEvent.EmailUpdated (user.Id, newEmail)] |> toOk
+        Ok [UserEvent.EmailUpdated (user.Id, newEmail)]
     else
-        [] |> toOk
+        Ok []
     
 let applyEvent user event =
     match event with

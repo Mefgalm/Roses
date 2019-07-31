@@ -10,17 +10,15 @@ open Common.Operators
 type ForwardCommand = Forward of Command * Compensation: Command
 type BackwardCommand = Backward of Command * Compensation: Command
 
-
-
 [<RequireQualifiedAccessAttribute>]
 type SagaState =
     | Empty
     | Fill of ForwardCommand list
     | Forward of Currect: ForwardCommand * Remains: ForwardCommand list * Completed: ForwardCommand list
-    | Backward of Currect: BackwardCommand * Remains: BackwardCommand list * Completed: BackwardCommand list
-    | BackwardAbort of Remains: BackwardCommand list * Completed: BackwardCommand list
-    | ForwardComplete of Completed: ForwardCommand list
-    | BackwardComplete of Completed: BackwardCommand list
+    | Backward of Error: string * Currect: BackwardCommand * Remains: BackwardCommand list * Completed: BackwardCommand list
+    | BackwardAbort of Error: string
+    | ForwardComplete
+    | BackwardComplete of Error: string
     | Stop
     
     
@@ -29,9 +27,9 @@ type SagaEvent =
     | SagaForwardCommandAdded of ForwardCommand
     | Started
     | Forwarded
-    | ForwardFailed
+    | ForwardFailed of Error: string //TODO make error generic?
     | Backwarded
-    | BackwardFailed
+    | BackwardFailed of Error: string
     | ForwardDone
     | BackwardDone
     | Stoped
@@ -47,14 +45,14 @@ type SagaCommand =
 [<RequireQualifiedAccess>]
 type SagaResponse =
     | ForwardComplete
-    | BackwardComplete
-    | BackwardAbort of string
-    | Stop of string
+    | BackwardComplete of Error: string
+    | BackwardAbort of Error: string
+    | Stop
 
 let forwardToBackward (Forward (command, compensation)) = Backward (command, compensation)
 
 let applyEvent state event =
-    printfn "Current state is: %A and event %A" state event
+    //printfn "Current state is: %A and event %A" state event
 
     match state, event with
     | SagaState.Empty, SagaEvent.SagaForwardCommandAdded cmd ->
@@ -70,20 +68,20 @@ let applyEvent state event =
     | SagaState.Forward (current, next::remains, completed), SagaEvent.Forwarded ->
         SagaState.Forward (next, remains, current::completed)
 
-    | SagaState.Forward (current, [], completed), SagaEvent.Forwarded ->
-        SagaState.ForwardComplete (current::completed)
+    | SagaState.Forward (_, [], _), SagaEvent.Forwarded ->
+        SagaState.ForwardComplete
     
-    | SagaState.Forward (current, _, completed), SagaEvent.ForwardFailed ->
-        SagaState.Backward (current |> forwardToBackward, completed |> List.map forwardToBackward, [])
+    | SagaState.Forward (current, _, completed), SagaEvent.ForwardFailed error ->
+        SagaState.Backward (error, current |> forwardToBackward, completed |> List.map forwardToBackward, [])
 
-    | SagaState.Backward (current, next::remains, completed), SagaEvent.Backwarded ->
-        SagaState.Backward (next, remains, current::completed)
+    | SagaState.Backward (error, current, next::remains, completed), SagaEvent.Backwarded ->
+        SagaState.Backward (error, next, remains, current::completed)
 
-    | SagaState.Backward (current, [], completed), SagaEvent.Backwarded ->
-        SagaState.BackwardComplete (current::completed)
+    | SagaState.Backward (error, _, [], _), SagaEvent.Backwarded ->
+        SagaState.BackwardComplete error
 
-    | SagaState.Backward (_, remains, completed), SagaEvent.BackwardFailed ->
-        SagaState.BackwardAbort (remains, completed)
+    | SagaState.Backward (error, _, _, _), SagaEvent.BackwardFailed backwardError ->
+        SagaState.BackwardAbort (error + " " + backwardError) //TODO make better concatenation
 
     | _, SagaEvent.Stoped ->
         SagaState.Stop
@@ -124,25 +122,25 @@ let runSaga () =
                         let sagaEvents =
                             match handleCommand command with
                             | Ok () -> [SagaEvent.Forwarded]
-                            | Error _ -> [SagaEvent.ForwardFailed]                            
+                            | Error error -> [SagaEvent.ForwardFailed error]                            
 
                         return! loop (sagaEvents |> playEvents state)
-                    | SagaState.Backward (Backward (_, compensation), _, _) ->
+                    | SagaState.Backward (_, Backward (_, compensation), _, _) ->
                         let sagaEvents =
                             match handleCommand compensation with
                             | Ok () -> [SagaEvent.Backwarded]
-                            | Error _ -> [SagaEvent.BackwardFailed]
+                            | Error backwardError -> [SagaEvent.BackwardFailed backwardError]
 
                         return! loop (sagaEvents |> playEvents state)
 
-                    | SagaState.BackwardAbort (remains, completed) ->
-                        mailbox.Sender() <! SagaResponse.BackwardAbort "BackwardAbort"
+                    | SagaState.BackwardAbort error ->
+                        mailbox.Sender() <! SagaResponse.BackwardAbort error
 
-                    | SagaState.ForwardComplete completed ->
+                    | SagaState.ForwardComplete ->
                         mailbox.Sender() <! SagaResponse.ForwardComplete
 
-                    | SagaState.BackwardComplete completed ->
-                        mailbox.Sender() <! SagaResponse.BackwardComplete
+                    | SagaState.BackwardComplete error ->
+                        mailbox.Sender() <! SagaResponse.BackwardComplete error
 
                     | SagaState.Stop ->
                         mailbox.Sender() <! SagaResponse.Stop
