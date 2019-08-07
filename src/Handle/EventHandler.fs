@@ -3,6 +3,7 @@ module Handle.EventHandler
 open AkkaCommon
 open FSharp.Control.Tasks
 
+open System
 open System.Threading
 open Handle
 open Akka.FSharp
@@ -10,9 +11,10 @@ open Kernel.Types
 open Kernel.Domain.User
 open Kernel.Types
 open Common
+open Kernel.Domain.DomainTypes
 open Write
 open System.Threading.Tasks
-
+open Read
 
 [<Literal>]
 let user = "User"
@@ -25,15 +27,25 @@ let eventStore nextVersion event =
     | DomainEvent.User (UserEvent.EmailUpdated (id, _) as e) ->
         EventStore.writeEvent id user nextVersion e
 
-let mongoDb () = async {    
-    return Ok ()
+let mongoDb event = asyncResult {
+    match event with
+    | DomainEvent.User (UserEvent.UserCreated (id, email, password, createdDate)) ->
+        return! ReadDb.addUser (id.ToString()) (Email.get email) (Password.get password) createdDate
+    | DomainEvent.User (UserEvent.EmailUpdated (id, newEmail)) ->
+        let strId = id.ToString()
+        
+        let! userRead = ReadDb.getUser strId
+        
+        do! ReadDb.updateUser strId { userRead with Email = (Email.get newEmail) }
+        
+        return ()
 }
 
 
 let eventHandler nextVersion event = async {
-    let! results = [eventStore nextVersion event; mongoDb ()] |> Async.Parallel
+    let! res = [eventStore nextVersion event; mongoDb event] |> Async.Parallel
     
-    return results |> Result.reduceResults    
+    return res |> Result.reduceResults
 } 
          
 

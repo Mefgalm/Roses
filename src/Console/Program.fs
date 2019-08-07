@@ -24,13 +24,11 @@ open Handle
 [<EntryPoint>]
 let main argv =
     
-    let createUserRequest = (RequestHandler.Request.CreateUser  ("mefgalm@gmail.com", "123", "123"))
+    let createUserRequest = (RequestHandler.Request.CreateUser  ("mefgalm2@gmail.com", "123", "123"))
     
     let response = RequestHandler.requestHandler createUserRequest
     
     printfn "result is %A" response
-    
-    Console.ReadKey() |> ignore
     
     0
     

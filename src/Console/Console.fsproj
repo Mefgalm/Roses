@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Handle\Handle.fsproj" />
     <ProjectReference Include="..\Kernel\Kernel.fsproj" />
+    <ProjectReference Include="..\Read\Read.fsproj" />
     <ProjectReference Include="..\Write\Write.fsproj" />
   </ItemGroup>
 

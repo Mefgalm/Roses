@@ -12,7 +12,9 @@ module Email =
         then Ok (Email str)
         else Error "email must not be empty"
         
-    let example = baseExample "mefalm@gmail.com" create 
+    let example = baseExample "mefalm@gmail.com" create
+    
+    let get (Email str) = str
 
 
 type Password = private Password of string
