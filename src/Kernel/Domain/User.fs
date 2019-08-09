@@ -3,31 +3,29 @@ module Kernel.Domain.User
 open System
 open Kernel.Domain.DomainTypes
 open Kernel.Domain.DomainTypes
+open Kernel.Domain.DomainTypes
 
 [<RequireQualifiedAccessAttribute>]
 type UserEvent = 
-    | UserCreated of Id: Guid * Email * Password * CreatedDate: DateTime
+    | UserCreated of Id: Guid * Email * Password * CreatedDate
     | EmailUpdated of Id: Guid * NewEmail: Email
 
-//let private toOk = Ok
-//let private toError = Error
-//  
 
 type User =
     { Id: Guid
       Email: Email
       Password: Password
-      CreatedDate: DateTime }
+      CreatedDate: CreatedDate }
     with
         static member Default =
             { Id = Guid.Empty
               Email = Email.example
               Password = Password.example
-              CreatedDate = DateTime.MinValue }
+              CreatedDate = CreatedDate.example }
 
-let createUser id email password repeatPassword getTime =
+let createUser id email password repeatPassword createdDate =
     if password = repeatPassword then
-        Ok [UserEvent.UserCreated (id, email, password, getTime())]
+        Ok [UserEvent.UserCreated (id, email, password, createdDate)]
     else
         Error "Passwords don't match" 
 

@@ -16,21 +16,18 @@ open Write
 open System.Threading.Tasks
 open Read
 
-[<Literal>]
-let user = "User"
-
 let eventStore nextVersion event =
     match event with
     | DomainEvent.User (UserEvent.UserCreated (id, _, _, _) as e) ->
-        EventStore.writeEvent id user nextVersion e
+        EventStore.writeEvent<UserEvent> id nextVersion e
         
     | DomainEvent.User (UserEvent.EmailUpdated (id, _) as e) ->
-        EventStore.writeEvent id user nextVersion e
+        EventStore.writeEvent<UserEvent> id nextVersion e
 
 let mongoDb event = asyncResult {
     match event with
     | DomainEvent.User (UserEvent.UserCreated (id, email, password, createdDate)) ->
-        return! ReadDb.addUser (id.ToString()) (Email.get email) (Password.get password) createdDate
+        return! ReadDb.addUser (id.ToString()) (Email.get email) (Password.get password) (CreatedDate.get createdDate)
     | DomainEvent.User (UserEvent.EmailUpdated (id, newEmail)) ->
         let strId = id.ToString()
         

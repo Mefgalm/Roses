@@ -27,16 +27,16 @@ let handleCommand command = result {
     | Command.CreateUser (userId, email, password, repeatPassword) ->
         let! email = Email.create email
         let! password = Password.create password
-        let! repeatPassword = Password.create repeatPassword        
+        let! repeatPassword = Password.create repeatPassword
+        let! createdDate = CreatedDate.create DateTime.UtcNow
         
-        let! events = User.createUser userId email password repeatPassword (fun () -> DateTime.UtcNow) 
+        let! events = User.createUser userId email password repeatPassword createdDate 
                 
         return! events
             |> zeroMapEvents DomainEvent.User
             |> waitResults
                   
-    | Command.ChangeUserEmail (userEntity, newEmail) ->
-        let { Version = currentVersion; Object = userObj } = userEntity
+    | Command.ChangeUserEmail ({ Version = currentVersion; Object = userObj }, newEmail) ->
         let! newEmail = Email.create newEmail
         
         let! events = User.updateEmail userObj newEmail 

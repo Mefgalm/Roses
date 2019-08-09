@@ -1,5 +1,7 @@
 module Kernel.Domain.DomainTypes
 
+open System
+
 let private baseExample value exampleFn =
     match exampleFn value with
     | Ok example -> example
@@ -27,4 +29,15 @@ module Password =
         
     let example = baseExample "123456" create        
             
-    let get (Password str) = str    
+    let get (Password str) = str
+    
+    
+type CreatedDate = private CreatedDate of DateTime
+module CreatedDate =
+    let create date = Ok (CreatedDate date)
+    
+    let example = baseExample DateTime.UtcNow create
+    
+    let get (CreatedDate date) = date
+    
+    

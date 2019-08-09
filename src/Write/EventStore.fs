@@ -3,27 +3,27 @@ module Write.EventStore
 open System
 open System
 open System.IO
+open System.IO
 open EventStore.ClientAPI
 open MBrace.FsPickler.Json
 open FSharp.Control.Tasks
+open Common.AsyncResult
+open MBrace.FsPickler
 
 
 [<Literal>]
 let eventStoreConnectionStrings = "ConnectTo=tcp://admin:changeit@localhost:1113; HeartBeatTimeout=500"
 
-let writeEvent (stream: Guid) eventType version events =
+let writeEvent<'t> (stream: Guid) version events =
     Async.AwaitTask <| task {
     try 
         let connection = EventStoreConnection.Create(eventStoreConnectionStrings)
         
         do! connection.ConnectAsync()
         
-        let jsonSerializer = FsPickler.CreateJsonSerializer(indent = false)
+        let eventType = typedefof<'t>.Name
         
-        use msStream = new MemoryStream()
-        jsonSerializer.Serialize(msStream, events)            
-        
-        let esEvent = new EventData(Guid.NewGuid(), eventType, true, msStream.ToArray(), Array.empty)
+        let esEvent = new EventData(Guid.NewGuid(), eventType, true, Common.JsonConv.serialize events, Array.empty)
         
         printfn "version %i" version
         
@@ -63,3 +63,19 @@ let readEvents stream =
         return Error e.Message
 }
 
+
+let readDomainEvents stream = asyncResult {
+    let! events = readEvents stream
+    
+    let jsonSerializer = FsPickler.CreateJsonSerializer(indent = false)        
+    
+    let answer = events |> Array.map(fun x ->
+        use msStream = new MemoryStream()
+        
+        let result = Convert.ChangeType(jsonSerializer.Deserialize(msStream), Type.GetType x.Event.EventType)
+    
+        result)    
+    
+    return answer   
+}
+    
