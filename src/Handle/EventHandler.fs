@@ -18,7 +18,7 @@ open Read
 
 let eventStore nextVersion event =
     match event with
-    | DomainEvent.User (UserEvent.UserCreated (id, _, _, _) as e) ->
+    | DomainEvent.User (UserEvent.UserCreated (id, email, password, createdDate) as e) ->
         EventStore.writeEvent<UserEvent> id nextVersion e
         
     | DomainEvent.User (UserEvent.EmailUpdated (id, _) as e) ->

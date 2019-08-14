@@ -8,7 +8,7 @@ open EventStore.ClientAPI
 open MBrace.FsPickler.Json
 open FSharp.Control.Tasks
 open Common.AsyncResult
-open MBrace.FsPickler
+open Common.JsonConv
 
 
 [<Literal>]
@@ -23,7 +23,9 @@ let writeEvent<'t> (stream: Guid) version events =
         
         let eventType = typedefof<'t>.Name
         
-        let esEvent = new EventData(Guid.NewGuid(), eventType, true, Common.JsonConv.serialize events, Array.empty)
+        let serializedEvent = Common.JsonConv.serialize events
+
+        let esEvent = new EventData(Guid.NewGuid(), eventType, true, Text.Encoding.UTF8.GetBytes serializedEvent, Array.empty)
         
         printfn "version %i" version
         
@@ -64,18 +66,18 @@ let readEvents stream =
 }
 
 
-let readDomainEvents stream = asyncResult {
-    let! events = readEvents stream
+//let readDomainEvents stream = asyncResult {
+//    let! events = readEvents stream
     
-    let jsonSerializer = FsPickler.CreateJsonSerializer(indent = false)        
+//    let jsonSerializer = FsPickler.CreateJsonSerializer(indent = false)        
     
-    let answer = events |> Array.map(fun x ->
-        use msStream = new MemoryStream()
+//    let answer = events |> Array.map(fun x ->
+//        use msStream = new MemoryStream()
         
-        let result = Convert.ChangeType(jsonSerializer.Deserialize(msStream), Type.GetType x.Event.EventType)
+//        let result = Convert.ChangeType(jsonSerializer.Deserialize(msStream), Type.GetType x.Event.EventType)
     
-        result)    
+//        result)    
     
-    return answer   
-}
+//    return answer   
+//}
     

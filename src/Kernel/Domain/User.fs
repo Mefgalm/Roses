@@ -4,6 +4,8 @@ open System
 open Kernel.Domain.DomainTypes
 open Kernel.Domain.DomainTypes
 open Kernel.Domain.DomainTypes
+open Newtonsoft.Json
+
 
 [<RequireQualifiedAccessAttribute>]
 type UserEvent = 

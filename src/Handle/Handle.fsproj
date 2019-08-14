@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Rehydrator.fs" />
     <Compile Include="AkkaCommon.fs" />
     <Compile Include="EventHandler.fs" />
     <Compile Include="CommandHandler.fs" />
