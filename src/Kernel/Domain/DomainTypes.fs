@@ -7,7 +7,7 @@ let private baseExample value exampleFn =
     | Ok example -> example
     | Error errorMsg -> failwith errorMsg
 
-type Email = private Email of string
+type Email = Email of string
 module Email =
     let create str =
         if str <> ""
@@ -19,7 +19,7 @@ module Email =
     let get (Email str) = str
 
 
-type Password = private Password of string
+type Password = Password of string
 module Password =
     
     let create str =
@@ -32,7 +32,7 @@ module Password =
     let get (Password str) = str
     
     
-type CreatedDate = private CreatedDate of DateTime
+type CreatedDate = CreatedDate of DateTime
 module CreatedDate =
     let create date = Ok (CreatedDate date)
     

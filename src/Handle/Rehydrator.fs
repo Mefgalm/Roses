@@ -17,13 +17,12 @@ let private getEntity applier stream = asyncResult {
 
     return
         events 
-        |> Seq.map (fun event -> 
-            event.Event.EventNumber, Common.JsonConv.deserialize (Text.Encoding.UTF8.GetString event.Event.Data) event.Event.EventNumber)
+        |> Seq.map (fun (number, eventData) -> number, Common.JsonConv.deserialize eventData)
         |> Seq.toArray
         |> Array.unzip
         |> fun (eventNumbers, domEvents) ->
             { Version = eventNumbers |> Array.max
-              Object = domEvents |> applier}    
+              Object = domEvents |> applier } 
 }
    
 let getUser stream =

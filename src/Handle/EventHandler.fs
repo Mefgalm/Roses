@@ -12,35 +12,56 @@ open Kernel.Domain.User
 open Kernel.Types
 open Common
 open Kernel.Domain.DomainTypes
+open Kernel.Domain.SuperAdmin
 open Write
-open System.Threading.Tasks
 open Read
+open Read.Types
 
 let eventStore nextVersion event =
     match event with
-    | DomainEvent.User (UserEvent.UserCreated (id, email, password, createdDate) as e) ->
-        EventStore.writeEvent<UserEvent> id nextVersion e
-        
+    | DomainEvent.User (UserEvent.UserCreated (id, _, _, _) as e)    
     | DomainEvent.User (UserEvent.EmailUpdated (id, _) as e) ->
         EventStore.writeEvent<UserEvent> id nextVersion e
+        
+    | DomainEvent.SuperAdmin (SuperAdminEvent.Created (id, _, _, _) as e) ->
+        EventStore.writeEvent<SuperAdminEvent> id nextVersion e
 
 let mongoDb event = asyncResult {
     match event with
     | DomainEvent.User (UserEvent.UserCreated (id, email, password, createdDate)) ->
-        return! ReadDb.addUser (id.ToString()) (Email.get email) (Password.get password) (CreatedDate.get createdDate)
+              
+        let userRead =
+            { UserRead.Id = id.ToString()
+              Email = email |> Email.get
+              Password = password |> Password.get
+              CreatedDate = createdDate |> CreatedDate.get }
+        
+        return! ReadDb.addEntity<UserRead> userRead
+                    
     | DomainEvent.User (UserEvent.EmailUpdated (id, newEmail)) ->
         let strId = id.ToString()
         
         let! userRead = ReadDb.getUser strId
         
-        do! ReadDb.updateUser strId { userRead with Email = (Email.get newEmail) }
+        do! ReadDb.updateEntity { userRead with Email = (Email.get newEmail) }
         
         return ()
+        
+    | DomainEvent.SuperAdmin (SuperAdminEvent.Created (id, email, password, createdDate)) ->
+        
+        let superAdminRead =
+            { SuperAdminRead.Id = id.ToString()
+              Email = email |> Email.get
+              Password = password |> Password.get
+              CreatedDate = createdDate |> CreatedDate.get }
+                                
+        return! ReadDb.addEntity<SuperAdminRead> superAdminRead
 }
 
 
 let eventHandler nextVersion event = async {
-    let! res = [eventStore nextVersion event; mongoDb event] |> Async.Parallel
+    let! res = [eventStore nextVersion event
+                mongoDb event] |> Async.Parallel
     
     return res |> Result.reduceResults
 } 

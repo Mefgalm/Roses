@@ -7,45 +7,68 @@ open MongoDB.Driver
 open Read.Types
 open FSharp.Control.Tasks
 open MongoDB.Driver
+open Types
 open System.Linq.Expressions
+open System.Threading.Tasks
 
 [<Literal>]
-let usersCol = "users"
+let private userColl = "users"
 
-let client = MongoClient(new MongoUrl("mongodb://localhost:27017"))
+[<Literal>]
+let private superAdminColl = "superAdmin"
 
-let database = client.GetDatabase("test")
+let private client = MongoClient(new MongoUrl("mongodb://localhost:27017"))
 
-let addUser id email password createdDate =
-    Async.AwaitTask <| task {
-    let userRead = { Id = id
-                     Email = email
-                     Password = password
-                     CreateDate = createdDate }    
-    
-    do! database.GetCollection<UserRead>(usersCol).InsertOneAsync(userRead)
-            
-    return Ok ()            
+let private database = client.GetDatabase("test")
+
+let private safeCall exnGenerator f = task {
+    try        
+        return! f()
+    with e ->
+        return Error (exnGenerator e)
 }
+
+let private getCollectionName (entity: 'a when 'a :> IReadEntity) =
+    match box entity with
+    | :? UserRead -> userColl
+    | :? SuperAdminRead -> superAdminColl
+    | _ -> failwith "Cannot find type"
+    
+
+let addEntity<'a when 'a :> IReadEntity> (entity: 'a) =
+    safeCall
+        (fun exn -> exn.Message)
+        (fun () -> task {
+            do! database.GetCollection<'a>(entity |> getCollectionName).InsertOneAsync entity
+            return Ok ()
+        }) 
+    |> Async.AwaitTask
+    
+    
+let updateEntity<'a when 'a :> IReadEntity> (entity: 'a) =
+    safeCall
+        (fun exn -> exn.Message)
+        (fun () -> task {
+            let! replaceResult = database.GetCollection<'a>(entity |> getCollectionName).ReplaceOneAsync((fun x -> x.Id = entity.Id), entity)
+            
+            if replaceResult.IsAcknowledged then
+                return Ok ()
+            else
+                return Error "some error"
+        })
+    |> Async.AwaitTask
+    
+    
+let private getEntity<'a when ^a :> IReadEntity> collection id =
+    safeCall
+        (fun exn -> exn.Message)
+        (fun () -> task {
+            let! cursor = database.GetCollection<'a>(collection).FindAsync(fun x -> x.Id = id)
+            let! single = cursor.SingleAsync()
+            return Ok single
+        })
+    |> Async.AwaitTask        
+
 
 let getUser id =
-    Async.AwaitTask <| task {
-    let! cursor = database.GetCollection<UserRead>(usersCol).FindAsync(fun x -> x.Id = id)        
-        
-    let! single = cursor.SingleAsync()         
-        
-    return Ok single         
-}
-
-
-let updateUser id newUser =
-    Async.AwaitTask <| task {
-        
-    let! result = database.GetCollection<UserRead>(usersCol).ReplaceOneAsync((fun x -> x.Id = id), newUser)       
-       
-    if result.IsAcknowledged then               
-        return Ok ()
-    else
-        return Error "error"
-}
-
+    getEntity<UserRead> userColl id

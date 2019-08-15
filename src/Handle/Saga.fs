@@ -56,10 +56,10 @@ let applyEvent state event =
 
     match state, event with
     | SagaState.Empty, SagaEvent.SagaForwardCommandAdded cmd ->
-        SagaState.Fill ^ [cmd]
+        SagaState.Fill [cmd]
 
     | SagaState.Fill cmds, SagaEvent.SagaForwardCommandAdded cmd ->
-        SagaState.Fill ^ (cmd::cmds)
+        SagaState.Fill (cmd::cmds)
 
     | SagaState.Fill (_::_ as cmds), SagaEvent.Started ->
         let current, remains = cmds |> List.rev |> (fun (x::xs) -> x, xs)

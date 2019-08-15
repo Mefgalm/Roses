@@ -1,83 +1,67 @@
 module Write.EventStore
 
 open System
-open System
-open System.IO
-open System.IO
+open System.Collections.Generic
 open EventStore.ClientAPI
-open MBrace.FsPickler.Json
 open FSharp.Control.Tasks
-open Common.AsyncResult
-open Common.JsonConv
-
 
 [<Literal>]
 let eventStoreConnectionStrings = "ConnectTo=tcp://admin:changeit@localhost:1113; HeartBeatTimeout=500"
 
+let private toBytes:(string -> byte[]) = Text.Encoding.UTF8.GetBytes
+let private toString:(byte[] -> string) = Text.Encoding.UTF8.GetString
+
+let private safeCall exnGenerator f = task {
+    try        
+        return! f()
+    with e ->
+        return Error (exnGenerator e)
+}
+
 let writeEvent<'t> (stream: Guid) version events =
-    Async.AwaitTask <| task {
-    try 
-        let connection = EventStoreConnection.Create(eventStoreConnectionStrings)
-        
-        do! connection.ConnectAsync()
-        
-        let eventType = typedefof<'t>.Name
-        
-        let serializedEvent = Common.JsonConv.serialize events
-
-        let esEvent = new EventData(Guid.NewGuid(), eventType, true, Text.Encoding.UTF8.GetBytes serializedEvent, Array.empty)
-        
-        printfn "version %i" version
-        
-        let! _ = connection.AppendToStreamAsync(stream.ToString(), version, esEvent)
-        
-        return Ok ()
-    with
-    | e ->
-        return Error e.Message 
-}
-    
-    
-let readEvents stream =
-    Async.AwaitTask <| task {
-    try 
-        let connection = EventStoreConnection.Create eventStoreConnectionStrings
-        
-        do! connection.ConnectAsync()
-        
-        let mutable isEnd = false
-        let mutable start = 0L
-        let count = 100
-        
-        let events = new System.Collections.Generic.List<ResolvedEvent>()        
-        
-        while not isEnd do                    
-            let! eventsSlice = connection.ReadStreamEventsForwardAsync(stream, start, count, false)
+    safeCall
+        (fun exn -> exn.Message)
+        (fun () -> task {
+            let connection = EventStoreConnection.Create(eventStoreConnectionStrings)
             
-            events.AddRange eventsSlice.Events        
+            do! connection.ConnectAsync()
             
-            start <- start + (count |> int64)
-            isEnd <- eventsSlice.IsEndOfStream
+            let eventType = typedefof<'t>.Name
             
-        return Ok (events.ToArray())
-    with
-    | e ->
-        return Error e.Message
-}
+            let serializedEvent = Common.JsonConv.serialize events
 
+            let esEvent = new EventData(Guid.NewGuid(), eventType, true, serializedEvent |> toBytes, Array.empty)
+            
+            let! _ = connection.AppendToStreamAsync(stream.ToString(), version, esEvent)                
+            
+            return Ok ()
+        })
+    |> Async.AwaitTask
 
-//let readDomainEvents stream = asyncResult {
-//    let! events = readEvents stream
-    
-//    let jsonSerializer = FsPickler.CreateJsonSerializer(indent = false)        
-    
-//    let answer = events |> Array.map(fun x ->
-//        use msStream = new MemoryStream()
         
-//        let result = Convert.ChangeType(jsonSerializer.Deserialize(msStream), Type.GetType x.Event.EventType)
-    
-//        result)    
-    
-//    return answer   
-//}
-    
+let readEventsSize takeSize stream =
+    safeCall
+        (fun exn -> exn.Message)
+        (fun () -> task {
+            let connection = EventStoreConnection.Create eventStoreConnectionStrings
+            
+            do! connection.ConnectAsync()
+            
+            let mutable isEnd = false
+            let mutable start = 0L
+            
+            let events = List<(int64 * string)>()        
+            
+            while not isEnd do                    
+                let! eventsSlice = connection.ReadStreamEventsForwardAsync(stream, start, takeSize, false)
+                
+                events.AddRange (eventsSlice.Events |> Array.map(fun e -> e.Event.EventNumber, e.Event.Data |> toString))        
+                
+                start <- start + (takeSize |> int64)
+                isEnd <- eventsSlice.IsEndOfStream
+                
+            return Ok (events.ToArray())
+        })
+    |> Async.AwaitTask
+
+let readEvents = readEventsSize 500

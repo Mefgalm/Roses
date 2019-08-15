@@ -7,6 +7,8 @@ open Kernel.Types
 open AkkaCommon
 open Common
 open Common.Operators
+open Handle
+open Kernel.Domain.DomainTypes
 
 [<RequireQualifiedAccessAttribute>]
 type Request =
@@ -14,7 +16,15 @@ type Request =
     | ChangeUserEmail of UserId: Guid * NewEmail: string
 
 
-let requestHandler request =
+let private mapSagaResponse response = function
+    | SagaResponse.ForwardComplete -> Ok response
+    | SagaResponse.BackwardComplete error -> Error error
+    | SagaResponse.BackwardAbort error -> Error error
+    | SagaResponse.Stop -> Ok None
+    
+let private mapEmptySagaResponse = mapSagaResponse None    
+
+let requestHandler request = asyncResult {
     match request with
     | Request.CreateUser (email, password, repeatPassword) ->                    
                     
@@ -22,13 +32,22 @@ let requestHandler request =
 
         let userId = Guid.NewGuid()
 
-        saga <! SagaCommand.AddForwardCommand ^ Forward ((Command.CreateUser (userId, email, password, repeatPassword)), Command.RemoveUser ^ userId)        
+        let forwardCmd = Command.CreateUser (userId, email, password, repeatPassword)
+        let backwardCmd = Command.RemoveUser userId
         
-        saga <^? SagaCommand.Start
+        saga <! SagaCommand.AddForwardCommand (Forward (forwardCmd, backwardCmd))        
+        
+        return (saga <^? SagaCommand.Start) |> mapSagaResponse (Some userId)        
     | Request.ChangeUserEmail  (userId, newEmail) ->
         
         let saga = runSaga()
         
-        //get user from ES    
-        SagaResponse.ForwardComplete
-    
+        let! userEntity = Rehydrator.getUser (userId.ToString())
+        
+        let forwardCmd = Command.ChangeUserEmail (userEntity, newEmail)
+        let backwardCmd = Command.ChangeUserEmail (userEntity, userEntity.Object.Email |> Email.get)
+        
+        saga <! SagaCommand.AddForwardCommand (Forward (forwardCmd, backwardCmd))
+                
+        return (saga <^? SagaCommand.Start) |> mapEmptySagaResponse
+}
