@@ -23,16 +23,17 @@ let private database = client.GetDatabase("test")
 
 let private safeCall exnGenerator f = task {
     try        
-        return! f()
+        return! f ()
     with e ->
-        return Error (exnGenerator e)
+        return Error [|ReadError.Exeption (exnGenerator e)|]
 }
+
 
 let private getCollectionName (entity: 'a when 'a :> IReadEntity) =
     match box entity with
     | :? UserRead -> userColl
     | :? SuperAdminRead -> superAdminColl
-    | _ -> failwith "Cannot find type"
+    | _ -> failwith "(getCollectionName) Cannot find type"
     
 
 let addEntity<'a when 'a :> IReadEntity> (entity: 'a) =
@@ -54,12 +55,12 @@ let updateEntity<'a when 'a :> IReadEntity> (entity: 'a) =
             if replaceResult.IsAcknowledged then
                 return Ok ()
             else
-                return Error "some error"
+                return (Error [|ReadError.SomeError|])
         })
     |> Async.AwaitTask
     
     
-let private getEntity<'a when ^a :> IReadEntity> collection id =
+let private getEntity<'a when 'a :> IReadEntity> collection id =
     safeCall
         (fun exn -> exn.Message)
         (fun () -> task {
@@ -72,3 +73,7 @@ let private getEntity<'a when ^a :> IReadEntity> collection id =
 
 let getUser id =
     getEntity<UserRead> userColl id
+
+
+let getSuperAdmin id =
+    getEntity<SuperAdminRead> superAdminColl id

@@ -5,7 +5,6 @@ open System
 open Kernel.Domain.User
 open Kernel.Domain.SuperAdmin
 
-
 type Entity<'a> =
     { Version: int64
       Object: 'a }
@@ -28,3 +27,5 @@ type Command =
     | CreateUser of UserId: Guid * Email: string * Password: string * RepeatPassword: string    
     | ChangeUserEmail of Entity: Entity<User> * NewEmail: string
     | RemoveUser of UserId: Guid
+    | CreateSuperAdmin of UserId: Guid * Email: string * Password: string * RepeatPassword: string    
+    | RemoveSuperAdmin of UserId: Guid

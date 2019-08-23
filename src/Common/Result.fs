@@ -13,4 +13,4 @@ let reduceResults results =
         | Ok (), Ok () -> Ok ()
         | Ok (), Error str 
         | Error str, Ok _ -> Error str
-        | Error str1, Error str2 -> Error (sprintf "%s %s" str1 str2)) results
+        | Error str1, Error str2 -> Error (Array.append str1 str2)) results

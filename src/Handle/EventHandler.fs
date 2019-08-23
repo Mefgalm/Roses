@@ -26,6 +26,9 @@ let eventStore nextVersion event =
     | DomainEvent.SuperAdmin (SuperAdminEvent.Created (id, _, _, _) as e) ->
         EventStore.writeEvent<SuperAdminEvent> id nextVersion e
 
+    | DomainEvent.SuperAdmin ((SuperAdminEvent.Removed id) as e) ->
+        EventStore.writeEvent<SuperAdminEvent> id nextVersion e
+
 let mongoDb event = asyncResult {
     match event with
     | DomainEvent.User (UserEvent.UserCreated (id, email, password, createdDate)) ->
@@ -53,9 +56,18 @@ let mongoDb event = asyncResult {
             { SuperAdminRead.Id = id.ToString()
               Email = email |> Email.get
               Password = password |> Password.get
-              CreatedDate = createdDate |> CreatedDate.get }
+              CreatedDate = createdDate |> CreatedDate.get
+              Status = SuperAdminStatus.Active }
                                 
         return! ReadDb.addEntity<SuperAdminRead> superAdminRead
+
+    | DomainEvent.SuperAdmin (SuperAdminEvent.Removed id) ->
+        
+        let! superAdminRead = ReadDb.getSuperAdmin (id.ToString())
+
+        do! ReadDb.updateEntity { superAdminRead with Status = SuperAdminStatus.Removed }
+
+        return ()
 }
 
 

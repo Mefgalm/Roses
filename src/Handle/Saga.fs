@@ -62,8 +62,8 @@ let applyEvent state event =
         SagaState.Fill (cmd::cmds)
 
     | SagaState.Fill (_::_ as cmds), SagaEvent.Started ->
-        let current, remains = cmds |> List.rev |> (fun (x::xs) -> x, xs)
-        SagaState.Forward (current, remains, [])
+        let revList = cmds |> List.rev
+        SagaState.Forward (revList.Head, revList.Tail, [])
 
     | SagaState.Forward (current, next::remains, completed), SagaEvent.Forwarded ->
         SagaState.Forward (next, remains, current::completed)

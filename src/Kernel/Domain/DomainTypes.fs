@@ -1,18 +1,19 @@
 module Kernel.Domain.DomainTypes
 
 open System
+open Kernel
 
 let private baseExample value exampleFn =
     match exampleFn value with
     | Ok example -> example
-    | Error errorMsg -> failwith errorMsg
+    | Error domErrors -> failwith (sprintf "%A" domErrors)
 
 type Email = Email of string
 module Email =
     let create str =
         if str <> ""
         then Ok (Email str)
-        else Error "email must not be empty"
+        else Error [|DomainError.WrongEmailPattern|]
         
     let example = baseExample "mefalm@gmail.com" create
     
@@ -25,7 +26,7 @@ module Password =
     let create str =
         if str <> ""
         then Ok (Password str)
-        else Error "password must not be empty"
+        else Error [|DomainError.WrongPasswordPattern|]
         
     let example = baseExample "123456" create        
             

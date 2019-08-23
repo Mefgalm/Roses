@@ -14,6 +14,7 @@ open Kernel.Domain.DomainTypes
 type Request =
     | CreateUser of Email: string * Password: string * RepeatPassword: string
     | ChangeUserEmail of UserId: Guid * NewEmail: string
+    | CreateSuperAdmin of Email: string * Password: string * RepeatPassword: string
 
 
 let private mapSagaResponse response = function
@@ -50,4 +51,16 @@ let requestHandler request = asyncResult {
         saga <! SagaCommand.AddForwardCommand (Forward (forwardCmd, backwardCmd))
                 
         return (saga <^? SagaCommand.Start) |> mapEmptySagaResponse
+
+    | Request.CreateSuperAdmin (email, password, repeatPassword) ->
+        let saga = runSaga ()
+        
+        let userId = Guid.NewGuid()
+        
+        let forwardCmd = Command.CreateSuperAdmin (userId, email, password, repeatPassword)
+        let backwardCmd = Command.RemoveSuperAdmin userId
+        
+        saga <! SagaCommand.AddForwardCommand (Forward (forwardCmd, backwardCmd))        
+        
+        return (saga <^? SagaCommand.Start) |> mapSagaResponse (Some userId)        
 }

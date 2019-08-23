@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="DomainError.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\User.fs" />
     <Compile Include="Domain\Rose.fs" />

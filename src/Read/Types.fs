@@ -15,13 +15,18 @@ type UserRead =
     
     interface IReadEntity with
         member this.Id = this.Id
+      
+type SuperAdminStatus = 
+    | Active
+    | Removed
         
-        
+[<CLIMutable>]
 type SuperAdminRead =
     { Id: string
       Email: string
       Password: string
-      CreatedDate: DateTime }
+      CreatedDate: DateTime
+      Status: SuperAdminStatus }
     
     interface IReadEntity with
         member this.Id = this.Id

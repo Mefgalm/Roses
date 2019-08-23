@@ -9,8 +9,9 @@ open EventHandler
 open Common
 open Common.Result
 open Kernel.Domain.DomainTypes
+open Kernel
 
-let private waitResults (tasks: seq<Async<Result<unit, string>>>) =
+let private waitResults (tasks: seq<Async<Result<unit, DomainError array>>>) =
     tasks
     |> Async.Parallel
     |> Async.RunSynchronously
@@ -36,14 +37,22 @@ let handleCommand command = result {
             |> zeroMapEvents DomainEvent.User
             |> waitResults
                   
-    | Command.ChangeUserEmail ({ Version = currentVersion; Object = userObj }, newEmail) ->
-        let! newEmail = Email.create newEmail
-        
-        let! events = User.updateEmail userObj newEmail 
-        
-        return! events
-            |> mapEvents currentVersion DomainEvent.User
-            |> waitResults
     | Command.RemoveUser userId ->
         return! Ok ()
+
+    | Command.CreateSuperAdmin (userId, email, password, repeatPassword) ->
+        let! email = Email.create email
+        let! password = Password.create password
+        let! repeatPassword = Password.create repeatPassword
+        let! createdDate = CreatedDate.create DateTime.UtcNow
+        
+        let! events = SuperAdmin.create userId email password repeatPassword createdDate 
+                
+        return! events
+            |> zeroMapEvents DomainEvent.SuperAdmin
+            |> waitResults
+    | _ -> return Ok ()
+
+    //| Command.RemoveSuperAdmin userId ->
+    //    let! events = SuperAdmin.
 }

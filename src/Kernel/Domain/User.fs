@@ -5,6 +5,7 @@ open Kernel.Domain.DomainTypes
 open Kernel.Domain.DomainTypes
 open Kernel.Domain.DomainTypes
 open Newtonsoft.Json
+open Kernel
 
 
 [<RequireQualifiedAccessAttribute>]
@@ -27,15 +28,15 @@ type User =
 
 let createUser id email password repeatPassword createdDate =
     if password = repeatPassword then
-        Ok [UserEvent.UserCreated (id, email, password, createdDate)]
+        Ok [|UserEvent.UserCreated (id, email, password, createdDate)|]
     else
-        Error "Passwords don't match" 
+        Error [|DomainError.PassworAndRepeatPasswordDontEqual|]
 
-let updateEmail user newEmail =
+let updateEmail user newEmail: Result<UserEvent array, DomainError array> =
     if user.Email <> newEmail then
-        Ok [UserEvent.EmailUpdated (user.Id, newEmail)]
+        Ok [|UserEvent.EmailUpdated (user.Id, newEmail)|]
     else
-        Ok []
+        Ok [||]
     
 let applyEvent user event =
     match event with
