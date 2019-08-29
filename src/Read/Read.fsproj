@@ -15,4 +15,8 @@
       <PackageReference Include="TaskBuilder.fs" Version="2.1.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Common\Common.fsproj" />
+    </ItemGroup>
+
 </Project>

@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Include="Async.fs" />
       <Compile Include="AsyncResult.fs" />
       <Compile Include="JsonConv.fs" />
       <Compile Include="Operators.fs" />

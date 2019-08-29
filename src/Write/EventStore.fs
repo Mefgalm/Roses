@@ -15,7 +15,7 @@ let private safeCall exnGenerator f = task {
     try        
         return! f()
     with e ->
-        return Error (exnGenerator e)
+        return Error [|WriteError.Exception (exnGenerator e)|]
 }
 
 let writeEvent<'t> (stream: Guid) version events =

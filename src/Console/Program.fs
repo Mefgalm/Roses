@@ -21,7 +21,7 @@ let main argv =
     
     match RequestHandler.requestHandler createUserRequest |> Async.RunSynchronously with
     | Ok result -> sprintf "%A" result
-    | Error error -> error
+    | Error error -> sprintf "%A" error
     |> printfn "result is -> %s"
 
     0

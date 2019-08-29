@@ -4,11 +4,12 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup >
+  <PropertyGroup>
     <WarningsAsErrors>FS0025</WarningsAsErrors>
   </PropertyGroup>
   
   <ItemGroup>
+    <Compile Include="CoreError.fs" />
     <Compile Include="Rehydrator.fs" />
     <Compile Include="AkkaCommon.fs" />
     <Compile Include="EventHandler.fs" />
@@ -25,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="Akka.FSharp" Version="1.3.14" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.5.0" />
   </ItemGroup>
 
 </Project>

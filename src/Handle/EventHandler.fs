@@ -16,6 +16,7 @@ open Kernel.Domain.SuperAdmin
 open Write
 open Read
 open Read.Types
+open CoreError
 
 let eventStore nextVersion event =
     match event with
@@ -70,10 +71,10 @@ let mongoDb event = asyncResult {
         return ()
 }
 
-
 let eventHandler nextVersion event = async {
-    let! res = [eventStore nextVersion event
-                mongoDb event] |> Async.Parallel
+    let! res = [eventStore nextVersion event |> Async.Map writeToCore
+                mongoDb event |> Async.Map readToCore] 
+                |> Async.Parallel
     
     return res |> Result.reduceResults
 } 

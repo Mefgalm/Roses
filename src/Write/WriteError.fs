@@ -1,7 +1,7 @@
-﻿namespace Read
+﻿namespace Write
 
 [<RequireQualifiedAccess>]
-type ReadError =
+type WriteError =
     | Exception of Message: string
     | SomeError
 

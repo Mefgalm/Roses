@@ -25,7 +25,7 @@ let private safeCall exnGenerator f = task {
     try        
         return! f ()
     with e ->
-        return Error [|ReadError.Exeption (exnGenerator e)|]
+        return Error [|ReadError.Exception (exnGenerator e)|]
 }
 
 

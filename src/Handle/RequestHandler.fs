@@ -38,7 +38,7 @@ let requestHandler request = asyncResult {
         
         saga <! SagaCommand.AddForwardCommand (Forward (forwardCmd, backwardCmd))        
         
-        return (saga <^? SagaCommand.Start) |> mapSagaResponse (Some userId)        
+        return! (saga <^? SagaCommand.Start) |> mapSagaResponse (Some userId)        
     | Request.ChangeUserEmail  (userId, newEmail) ->
         
         let saga = runSaga()
@@ -50,7 +50,7 @@ let requestHandler request = asyncResult {
         
         saga <! SagaCommand.AddForwardCommand (Forward (forwardCmd, backwardCmd))
                 
-        return (saga <^? SagaCommand.Start) |> mapEmptySagaResponse
+        return! (saga <^? SagaCommand.Start) |> mapEmptySagaResponse
 
     | Request.CreateSuperAdmin (email, password, repeatPassword) ->
         let saga = runSaga ()
@@ -62,5 +62,5 @@ let requestHandler request = asyncResult {
         
         saga <! SagaCommand.AddForwardCommand (Forward (forwardCmd, backwardCmd))        
         
-        return (saga <^? SagaCommand.Start) |> mapSagaResponse (Some userId)        
+        return! (saga <^? SagaCommand.Start) |> mapSagaResponse (Some userId)        
 }

@@ -5,7 +5,7 @@ open System
 open Kernel.Types
 open AkkaCommon
 open CommandHandler
-open Common.Operators
+open CoreError
 
 type ForwardCommand = Forward of Command * Compensation: Command
 type BackwardCommand = Backward of Command * Compensation: Command
@@ -15,10 +15,10 @@ type SagaState =
     | Empty
     | Fill of ForwardCommand list
     | Forward of Currect: ForwardCommand * Remains: ForwardCommand list * Completed: ForwardCommand list
-    | Backward of Error: string * Currect: BackwardCommand * Remains: BackwardCommand list * Completed: BackwardCommand list
-    | BackwardAbort of Error: string
+    | Backward of Errors: CoreError array * Currect: BackwardCommand * Remains: BackwardCommand list * Completed: BackwardCommand list
+    | BackwardAbort of Errors: CoreError array
     | ForwardComplete
-    | BackwardComplete of Error: string
+    | BackwardComplete of Error: CoreError array
     | Stop
     
     
@@ -27,9 +27,9 @@ type SagaEvent =
     | SagaForwardCommandAdded of ForwardCommand
     | Started
     | Forwarded
-    | ForwardFailed of Error: string //TODO make error generic?
+    | ForwardFailed of Errors: CoreError array
     | Backwarded
-    | BackwardFailed of Error: string
+    | BackwardFailed of Errors: CoreError array
     | ForwardDone
     | BackwardDone
     | Stoped
@@ -45,8 +45,8 @@ type SagaCommand =
 [<RequireQualifiedAccess>]
 type SagaResponse =
     | ForwardComplete
-    | BackwardComplete of Error: string
-    | BackwardAbort of Error: string
+    | BackwardComplete of Errors: CoreError array
+    | BackwardAbort of Errors: CoreError array
     | Stop
 
 let forwardToBackward (Forward (command, compensation)) = Backward (command, compensation)
@@ -77,11 +77,11 @@ let applyEvent state event =
     | SagaState.Backward (error, current, next::remains, completed), SagaEvent.Backwarded ->
         SagaState.Backward (error, next, remains, current::completed)
 
-    | SagaState.Backward (error, _, [], _), SagaEvent.Backwarded ->
-        SagaState.BackwardComplete error
+    | SagaState.Backward (errors, _, [], _), SagaEvent.Backwarded ->
+        SagaState.BackwardComplete errors
 
     | SagaState.Backward (error, _, _, _), SagaEvent.BackwardFailed backwardError ->
-        SagaState.BackwardAbort (error + " " + backwardError) //TODO make better concatenation
+        SagaState.BackwardAbort (Array.append error backwardError)
 
     | _, SagaEvent.Stoped ->
         SagaState.Stop
@@ -122,7 +122,7 @@ let runSaga () =
                         let sagaEvents =
                             match handleCommand command with
                             | Ok () -> [SagaEvent.Forwarded]
-                            | Error error -> [SagaEvent.ForwardFailed error]                            
+                            | Error errors -> [SagaEvent.ForwardFailed errors]                            
 
                         return! loop (sagaEvents |> playEvents state)
                     | SagaState.Backward (_, Backward (_, compensation), _, _) ->

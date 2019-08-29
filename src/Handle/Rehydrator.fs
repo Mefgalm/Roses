@@ -10,10 +10,11 @@ open Write
 open Common.AsyncResult
 open Common.JsonConv
 open System
-
+open CoreError
+open Common
 
 let private getEntity applier stream = asyncResult {
-    let! events = EventStore.readEvents stream
+    let! events = EventStore.readEvents stream |> Async.Map writeToCore
 
     return
         events 
