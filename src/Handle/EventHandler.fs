@@ -36,9 +36,9 @@ let mongoDb event = asyncResult {
               
         let userRead =
             { UserRead.Id = id.ToString()
-              Email = email |> Email.get
-              Password = password |> Password.get
-              CreatedDate = createdDate |> CreatedDate.get }
+              Email = email |> Email.Get
+              Password = password |> Password.Get
+              CreatedDate = createdDate |> CreatedDate.Get }
         
         return! ReadDb.addEntity<UserRead> userRead
                     
@@ -47,7 +47,7 @@ let mongoDb event = asyncResult {
         
         let! userRead = ReadDb.getUser strId
         
-        do! ReadDb.updateEntity { userRead with Email = (Email.get newEmail) }
+        do! ReadDb.updateEntity { userRead with Email = (Email.Get newEmail) }
         
         return ()
         
@@ -55,9 +55,9 @@ let mongoDb event = asyncResult {
         
         let superAdminRead =
             { SuperAdminRead.Id = id.ToString()
-              Email = email |> Email.get
-              Password = password |> Password.get
-              CreatedDate = createdDate |> CreatedDate.get
+              Email = email |> Email.Get
+              Password = password |> Password.Get
+              CreatedDate = createdDate |> CreatedDate.Get
               Status = SuperAdminStatus.Active }
                                 
         return! ReadDb.addEntity<SuperAdminRead> superAdminRead

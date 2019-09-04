@@ -28,10 +28,10 @@ let private zeroMapEvents mapper =
 let handleCommand command: Result<unit, CoreError array> = result {
     match command with
     | Command.CreateUser (userId, email, password, repeatPassword) ->
-        let! email = Email.create email |> domainToCore
-        let! password = Password.create password |> domainToCore
-        let! repeatPassword = Password.create repeatPassword |> domainToCore
-        let! createdDate = CreatedDate.create DateTime.UtcNow
+        let! email = Email.Create email |> domainToCore
+        let! password = Password.Create password |> domainToCore
+        let! repeatPassword = Password.Create repeatPassword |> domainToCore
+        let! createdDate = CreatedDate.Create DateTime.UtcNow
         
         let eventsResult = User.createUser userId email password repeatPassword createdDate 
 

@@ -9,7 +9,9 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <Compile Include="HandleError.fs" />
     <Compile Include="CoreError.fs" />
+    <Compile Include="JWTService.fs" />
     <Compile Include="Rehydrator.fs" />
     <Compile Include="AkkaCommon.fs" />
     <Compile Include="EventHandler.fs" />

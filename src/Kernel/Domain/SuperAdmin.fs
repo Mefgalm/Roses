@@ -22,9 +22,9 @@ type SuperAdmin =
     with
         static member Default =
             { Id = Guid.Empty
-              Email = Email.example
-              Password = Password.example
-              CreatedDate = CreatedDate.example
+              Email = Email.Example
+              Password = Password.Example
+              CreatedDate = CreatedDate.Example
               Status = Status.Active }
             
                         

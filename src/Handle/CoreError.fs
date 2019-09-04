@@ -16,6 +16,7 @@ let private errorToCore f result =
     | Ok x -> Ok x
     | Error domainErrors -> Error (domainErrors |> Array.map f)
 
+
 let domainToCore result = errorToCore CoreError.Domain result
 
 let writeToCore result = errorToCore CoreError.Write result
