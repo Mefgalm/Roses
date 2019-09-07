@@ -12,16 +12,16 @@ open System.Linq.Expressions
 open System.Threading.Tasks
 
 [<Literal>]
-let private userColl = "users"
+let userColl = "users"
 
 [<Literal>]
-let private superAdminColl = "superAdmin"
+let superAdminColl = "superAdmin"
 
-let private client = MongoClient(new MongoUrl("mongodb://localhost:27017"))
+let client = MongoClient(new MongoUrl("mongodb://localhost:27017"))
 
-let private database = client.GetDatabase("test")
+let database = client.GetDatabase("test")
 
-let private safeCall exnGenerator f = task {
+let safeCall exnGenerator f = task {
     try        
         return! f ()
     with e ->
@@ -60,7 +60,7 @@ let updateEntity<'a when 'a :> IReadEntity> (entity: 'a) =
     |> Async.AwaitTask
     
     
-let private getEntity<'a when 'a :> IReadEntity> collection id =
+let getEntity<'a when 'a :> IReadEntity> collection id =
     safeCall
         (fun exn -> exn.Message)
         (fun () -> task {
@@ -69,11 +69,3 @@ let private getEntity<'a when 'a :> IReadEntity> collection id =
             return Ok single
         })
     |> Async.AwaitTask        
-
-
-let getUser id =
-    getEntity<UserRead> userColl id
-
-
-let getSuperAdmin id =
-    getEntity<SuperAdminRead> superAdminColl id

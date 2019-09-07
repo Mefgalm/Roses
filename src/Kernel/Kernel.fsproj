@@ -9,7 +9,6 @@
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\User.fs" />
     <Compile Include="Domain\Rose.fs" />
-    <Compile Include="Domain\SuperAdmin.fs" />
     <Compile Include="Types.fs" />
   </ItemGroup>
 

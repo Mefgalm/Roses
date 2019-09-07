@@ -6,4 +6,5 @@ type DomainError =
     | PassworAndRepeatPasswordDontEqual
     | WrongPasswordPattern
     | WrongEmailPattern
+    | PasswordOrEmailIsWrong
 

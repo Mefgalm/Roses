@@ -8,6 +8,7 @@
         <Compile Include="ReadError.fs" />
         <Compile Include="Types.fs" />
         <Compile Include="ReadDb.fs" />
+        <Compile Include="UserReadDb.fs" />
     </ItemGroup>
 
     <ItemGroup>

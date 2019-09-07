@@ -27,21 +27,17 @@ let private zeroMapEvents mapper =
 
 let handleCommand command: Result<unit, CoreError array> = result {
     match command with
-    | Command.CreateUser (userId, email, password, repeatPassword) ->
+    | Command.CreateUser (userId, email, password, repeatPassword, roles) ->
         let! email = Email.Create email |> domainToCore
         let! password = Password.Create password |> domainToCore
         let! repeatPassword = Password.Create repeatPassword |> domainToCore
         let! createdDate = CreatedDate.Create DateTime.UtcNow
         
-        let eventsResult = User.createUser userId email password repeatPassword createdDate 
+        let! events = User.createUser userId email password repeatPassword roles createdDate |> domainToCore
 
-        match eventsResult with
-        | Ok events -> 
-            return! events
-                    |> zeroMapEvents DomainEvent.User
-                    |> waitResults
-        | Error domErrors ->
-            return! Error [||]
+        return! events
+                |> zeroMapEvents DomainEvent.User
+                |> waitResults
                 
     | Command.RemoveUser userId ->
         return! Ok ()
@@ -57,6 +53,13 @@ let handleCommand command: Result<unit, CoreError array> = result {
     //    return! events
     //        |> zeroMapEvents DomainEvent.SuperAdmin
     //        |> waitResults
+    | Command.SignIn (user, email, password) ->
+        let! events = User.signIn user email password |> domainToCore
+
+        return! events
+                |> zeroMapEvents DomainEvent.User
+                |> waitResults
+
     | _ -> return! Ok ()
 
     //| Command.RemoveSuperAdmin userId ->

@@ -1,9 +1,6 @@
-﻿module Handle.HandleError
+﻿namespace Handle
 
 [<RequireQualifiedAccess>]
-type DomainError =
-    | WrongStatus
-    | PassworAndRepeatPasswordDontEqual
-    | WrongPasswordPattern
-    | WrongEmailPattern
+type HandleError =
+    | Unauthorized
 

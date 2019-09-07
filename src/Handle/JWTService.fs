@@ -64,17 +64,20 @@ let generate secret issuer audience daysToExpire now tokenPayload =
         .WriteToken(jwt)
 
 
-let validateToken secret issuer audience (token: string) =
-    try 
-        let _, securityToken = 
-                JwtSecurityTokenHandler()
-                    .ValidateToken(token, 
-                               TokenValidationParameters(ValidAudience = (audience |> Audience.Get),
-                                                         ValidIssuer = (issuer |> Issuer.Get),
-                                                         IssuerSigningKey = generateSymmetricSecurityKey (secret |> Secret.Get)))
+let validateToken secret issuer audience (token: string option) =
+    match token with
+    | Some t -> 
+        try 
+            let _, securityToken = 
+                    JwtSecurityTokenHandler()
+                        .ValidateToken(token, 
+                                   TokenValidationParameters(ValidAudience = (audience |> Audience.Get),
+                                                             ValidIssuer = (issuer |> Issuer.Get),
+                                                             IssuerSigningKey = generateSymmetricSecurityKey (secret |> Secret.Get)))
         
-        securityToken <> null
-    with _ -> false
+            securityToken <> null
+        with _ -> false
+    | None -> false            
 
 
 let getPayload secret issuer audience (token: string) =

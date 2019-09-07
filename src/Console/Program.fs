@@ -20,7 +20,7 @@ type TestB = { Id : string; Name: string }
 
 [<EntryPoint>]
 let main argv =
-    let createUserRequest = RequestHandler.Request.CreateUser ("mefgalm2@gmail.com", "123", "123")
+    let createUserRequest = RequestHandler.Request.CreateSuperAdminUser ("mefgalm2@gmail.com", "123", "123")
     
     let secret = Secret.Create "1234567890qwerty"
     let audience = Audience.Create "Test"

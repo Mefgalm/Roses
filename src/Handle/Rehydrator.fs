@@ -3,8 +3,6 @@ module Handle.Rehydrator
 open Kernel.Domain.User
 open Kernel.Domain
 open Kernel.Types
-open Kernel.Domain.SuperAdmin
-open Kernel.Domain.SuperAdmin
 open Common.AsyncResult
 open Write
 open Common.AsyncResult
@@ -29,8 +27,8 @@ let private getEntity applier stream = asyncResult {
 let getUser stream =
     getEntity (User.applyEvents User.User.Default) stream
 
-let getRose stream =
-    getEntity (SuperAdmin.applyEvents SuperAdmin.SuperAdmin.Default) stream
+//let getRose stream =
+//    getEntity (SuperAdmin.applyEvents SuperAdmin.SuperAdmin.Default) stream
 
 
 //
